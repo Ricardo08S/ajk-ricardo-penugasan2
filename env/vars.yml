@@ -1,0 +1,5 @@
+---
+
+db_name: dbAnsible
+db_user: dbUser
+db_password: dbPass

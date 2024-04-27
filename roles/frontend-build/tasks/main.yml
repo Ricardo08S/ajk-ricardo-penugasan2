@@ -1,0 +1,123 @@
+---
+# tasks file for frontend-build
+
+# - name: Install NVM (Node Version Manager)
+#   become_user: "ubuntu"
+#   shell: >
+#     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+#   args:
+#     creates: "home/ubuntu/.nvm/nvm.sh"
+#     executable: /bin/bash
+
+- name: Install nvm
+  shell: >
+    curl https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh  | sh
+    creates=~/.nvm/nvm.sh
+
+- name: Install node and set version
+  shell: >
+    /bin/bash -c "source ~/.nvm/nvm.sh && nvm install 18 && nvm alias default 18"
+    creates=~/.nvm/alias
+
+# - name: Run yarn install to install dependencies
+#   become_user: "ubuntu"
+#   shell: |
+#     source /home/ubuntu/.nvm/nvm.sh
+#     nvm use 16
+#     yarn install
+#   args:
+#     chdir: "/var/www/fe-todo"
+#     executable: /bin/bash
+
+# - name: Installing npm package 
+#   become: true
+#   apt:
+#     name: npm
+#     state: present
+
+
+- name: Install npm and pm2 globally
+  shell: |
+    apt install npm -y
+    npm install pm2 -g
+
+- name: Installing Curl package
+  become: true
+  apt:
+    name: curl
+    state: present
+
+- name: Add Yarn GPG
+  become: true
+  shell: "curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -"
+
+- name: Add Yarn repository
+  become: true
+  shell: "echo 'deb https://dl.yarnpkg.com/debian/ stable main' | sudo tee /etc/apt/sources.list.d/yarn.list"
+  notify: Update apt package cache
+
+- name: Install Yarn
+  apt:
+    name: yarn
+    update_cache: yes
+    state: present
+
+- name: Clone the repository
+  git:
+    repo: 'https://github.com/elshiraphine/fe-todo.git'
+    dest: '/var/www/fe-todo'
+    clone: yes
+    update: yes
+    force: yes
+  become: true
+  become_user: www-data
+
+- name: Set permissions on the repository
+  file:
+    path: '/var/www/fe-todo'
+    state: directory
+    mode: '0777'
+
+- name: Remove package-lock.json to avoid conflicts
+  file:
+    path: "/var/www/fe-todo/package-lock.json"
+    state: absent
+
+- name: Run yarn add to install dependencies
+  become: true
+  shell: |
+    /bin/bash -c "source ~/.nvm/nvm.sh && nvm use 18 && yarn install"
+  args:
+    chdir: "/var/www/fe-todo"
+    executable: /bin/bash
+
+# - name: Run yarn add to install dependencies
+#   become: true
+#   shell: |
+#     source ~/.nvm/nvm.sh
+#     yarn install
+#   args:
+#     chdir: "/var/www/fe-todo"
+
+- name: Build the project using yarn
+  become: true
+  shell: >
+    /bin/bash -c "source ~/.nvm/nvm.sh && nvm use 18 && yarn build"
+  args:
+    chdir: "/var/www/fe-todo"
+    executable: /bin/bash
+
+- name: Start PM2
+  shell: pm2 start --name fe-todo "yarn start"
+  args:
+    chdir: "/var/www/fe-todo"
+
+# - name: Install dependencies using yarn
+#   shell: yarn install --ignore-engines
+#   args:
+#     chdir: "/var/www/fe-todo"
+
+# - name: Build the project using yarn
+#   shell: yarn build
+#   args:
+#     chdir: "/var/www/fe-todo"

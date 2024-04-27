@@ -1,0 +1,9 @@
+---
+
+- name: Preparing nginx and mysql
+  become: true
+  hosts: webserver
+  roles: 
+    - ../roles/nginx-prepare
+    - ../roles/mysql-prepare
+

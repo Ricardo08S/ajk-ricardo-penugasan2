@@ -1,0 +1,8 @@
+---
+
+- name: Deploy fe and be
+  become: true
+  hosts: webserver
+  roles: 
+    - ../roles/backend-deploy
+    - ../roles/frontend-deploy
