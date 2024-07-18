@@ -4,7 +4,7 @@
   become: true
   hosts: webserver
   roles: 
-    # - ../roles/backend-build
+    - ../roles/backend-build
     - ../roles/frontend-build
-    - ../roles/frontend-deploy
+    # - ../roles/frontend-deploy
 
